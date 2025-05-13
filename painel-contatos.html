@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Contatos - SunShield</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    h1 {
+      color: #00ffe1;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      width: 200px;
+    }
+    button {
+      background-color: #00a88c;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #00e6de;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border-bottom: 1px solid #444;
+      padding: 10px;
+      text-align: left;
+    }
+    tr:hover {
+      background-color: #1e1e1e;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📞 Painel de Contatos - SunShield</h1>
+
+  <div>
+    <input id="nome" type="text" placeholder="Nome do contato">
+    <input id="telefone" type="text" placeholder="Telefone (+55...)">
+    <button onclick="adicionarContato()">Salvar</button>
+  </div>
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Telefone</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function carregarContatos() {
+      const res = await fetch('/contatos');
+      const data = await res.json();
+      const tbody = document.querySelector("#tabela tbody");
+      tbody.innerHTML = '';
+
+      Object.entries(data).forEach(([nome, tel]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${nome}</td>
+          <td>${tel}</td>
+          <td>
+            <button onclick="editarContato('${nome}', '${tel}')">Editar</button>
+            <button onclick="excluirContato('${nome}')">Excluir</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function adicionarContato() {
+      const nome = document.getElementById("nome").value.trim().toLowerCase();
+      const telefone = document.getElementById("telefone").value.trim();
+      if (!nome || !telefone) return alert("Preencha todos os campos");
+
+      await fetch('/contatos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ nome, telefone })
+      });
+      document.getElementById("nome").value = '';
+      document.getElementById("telefone").value = '';
+      carregarContatos();
+    }
+
+    async function excluirContato(nome) {
+      if (!confirm(`Excluir ${nome}?`)) return;
+      await fetch(`/contatos/${nome}`, { method: 'DELETE' });
+      carregarContatos();
+    }
+
+    function editarContato(nome, telefone) {
+      document.getElementById("nome").value = nome;
+      document.getElementById("telefone").value = telefone;
+    }
+
+    carregarContatos();
+  </script>
+</body>
+</html>
